@@ -7,6 +7,8 @@ function koi -d "Create a plugin from a template" -a template name
         case -h
             printf "Usage: koi <url> <name> [--help]\n\n"
             printf "    -h --help    Show usage help\n"
+            printf "Example:\n"
+            printf "koi jethrokuan/koi-template foo\n"
             return
 
         case \*/\*
@@ -15,14 +17,8 @@ function koi -d "Create a plugin from a template" -a template name
         case https://\?\*
             set url "$template"
 
-        case -\*
-            printf "new: '%s' is not a valid option.\n" $template > /dev/stderr
-            return 1
-
         case \*
             printf "new: '%s' is not a valid template.\n\n" $template > /dev/stderr
-            printf "The available templates are:\n" > /dev/stderr
-            printf "\t %s\n" $templates > /dev/stderr
             return 1
     end
 
@@ -31,23 +27,31 @@ function koi -d "Create a plugin from a template" -a template name
     end
 
     if test -d "$name"
-        printf "new: '%s' already exists and is not empty." $name > /dev/stderr
+        printf "koi: '%s' already exists and is not empty." $name > /dev/stderr
         return 1
     else
+        printf "Cloning $url into '$name'...\n"
         fish -c "command git clone -q $url $name & await"
 
         # Very rough check on success of git clone
         if test -d "$name"
-            printf "  ✓ Clone success\n" $name > /dev/stderr
+            printf "    ✓ Cloned successfully\n" $name > /dev/stderr
         else
-            printf "  × Clone unsucessful\n" $name > /dev/stderr
+            printf "    × Clone unsucessful\n" $name > /dev/stderr
             return 1
         end
     end
 
     pushd "$name"
-    rm -rf .git
 
+    function __koi_cleanup -d "Cleans up after installation"
+        rm .vars > /dev/null
+        rm -r .git > /dev/null
+        printf "koi: project '$name' successfully created!"
+        functions -e __koi_cleanup
+    end
+
+    # Read vars from input
     set -l vars
     if test -s .vars
         set arrayName (cat .vars)
@@ -56,6 +60,7 @@ function koi -d "Create a plugin from a template" -a template name
         end
     else
         # No variables, work is done
+        __koi_cleanup
         popd
         return 0
     end
@@ -72,14 +77,12 @@ function koi -d "Create a plugin from a template" -a template name
     for file in **
         if test -f "$file"
             for i in (seq (count $vars))
-
                 sed -i.tmp "s|{{{$vars[$i]}}}|$input[$i]|g" "$file"
                 command rm -f "$file.tmp"
             end
         end
     end
 
-    printf "Scaffold success!"
-
+    __koi_cleanup
     popd
 end
