@@ -63,7 +63,6 @@ if test -s .vars
 else
   # No variables, work is done
   __koi_cleanup
-  popd
   return 0
 end
 
