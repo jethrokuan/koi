@@ -1,5 +1,4 @@
-[travis-link]: https://travis-ci.org/fisherman/fisherman
-[travis-badge]: https://img.shields.io/travis/fisherman/fisherman.svg
+[![Slack][slack-badge]][slack-link]
 
 # Koi
 
