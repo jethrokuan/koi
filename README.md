@@ -9,7 +9,7 @@ Project scaffolder.
 With [fisherman]
 
 ```
-fisher jethrokuan/koi
+fisher koi
 ```
 
 ## Usage
