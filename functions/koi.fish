@@ -1,20 +1,20 @@
 function koi -d "Create a plugin from a template" -a template name
   set -l url
 
-  function __koi_report -a level message
-    set -l string
-    set -l color_koi (set_color 1693A5)
+  function __koi_report -a level message   
+    set string "koi"
     set -l color_success (set_color green)
     set -l color_warn (set_color yellow)
     set -l color_error (set_color red)
     set -l color_normal (set_color normal)
+    set_color 1693A5
     switch "$level"
       case "success"
-        set string "$color_koi koi $color_success SUCCESS $color_normal $message\n"
+        set string $string "$color_success SUCCESS $color_normal $message\n"
       case "warn"
-        set string "$color_koi koi $color_warn WARN $color_normal    $message\n"
+        set string $string "$color_warn WARN $color_normal    $message\n"
       case "error"
-        set string "$color_koi koi $color_error ERROR $color_normal   $message\n"
+        set string $string "$color_error ERROR $color_normal   $message\n"
       case \*
         return 1
     end
@@ -63,10 +63,13 @@ function koi -d "Create a plugin from a template" -a template name
   pushd "$name"
 
   function __koi_cleanup -d "Cleans up after installation"
-    if test -e .vars
-      rm .vars > /dev/null
+    if test -e .intro
+      rm .intro
     end
-    rm -rf .git > /dev/null
+    if test -e .vars
+      rm .vars
+    end
+    rm -rf .git
     popd
     __koi_report "success" "project successfully created!"
     functions -e __koi_cleanup
@@ -74,6 +77,14 @@ function koi -d "Create a plugin from a template" -a template name
 
   # Read vars from input
   set -l vars
+
+  # Print first 10 lines of intro text, if any
+  if test -s .intro
+    printf "\n"
+    head -n10 .intro
+    printf "\n"
+  end
+  
   if test -s .vars 
     set arrayName (cat .vars)
     for var in $arrayName
@@ -86,12 +97,12 @@ function koi -d "Create a plugin from a template" -a template name
     return 0
   end
 
-  printf "\n Reading variable file:\n"
+  printf "\nReading variable file:\n"
 
   set -l input
   for var in $vars
     set -l promptvar
-    get --prompt " $var:" | read -l promptvar
+    get --prompt "$var:" | read -l promptvar
     set input $input $promptvar
   end
 
@@ -107,5 +118,4 @@ function koi -d "Create a plugin from a template" -a template name
   end
 
   __koi_cleanup
-  popd
 end
