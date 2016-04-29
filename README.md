@@ -19,6 +19,10 @@ koi your/repo folder
 ```
 
 ## Templates
+### .intro
+At times you want to present or explain some info to the template user. This can be done by writing text in `.intro`. Only the first 10 lines will be printed during the scaffolding process, to encourage conciseness.
+
+### .vars
 Your template folder should have a `.vars` file in the root directory. Write each variable name in a separate line as follows:
 
 ```
