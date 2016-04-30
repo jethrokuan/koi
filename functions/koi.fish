@@ -92,13 +92,32 @@ function koi -d "Create a plugin from a template" -a template name
         set input $input $promptvar
     end
 
+    set -l cnt (count $vars)
+
     printf "\n"
 
-    for file in **
+    #rename folders first
+    for folder in **/
+        for i in (seq $cnt)
+            set -l newfolder (echo $folder | sed "s/{{{$vars[$i]}}}/$input[$i]/")
+            debug "$folder $newfolder"
+            if test "$folder" != "$newfolder"
+                mv $folder $newfolder
+                break
+            end
+        end
+    end
+
+    #process files
+    for file in **.*
         if test -f "$file"
-            for i in (seq (count $vars))
-                sed -i.tmp "s|{{{$vars[$i]}}}|$input[$i]|g" "$file"
-                command rm -f "$file.tmp"
+            for i in (seq $cnt)
+                sed -i "s|{{{$vars[$i]}}}|$input[$i]|g" "$file"
+                set -l newfile (echo $file | sed "s/{{{$vars[$i]}}}/$input[$i]/")
+                if test "$file" != "$newfile"
+                    mv $file $newfile
+                    break
+                end
             end
         end
     end
