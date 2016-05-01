@@ -2,7 +2,7 @@
 
 # Koi
 
-Project scaffolder.
+Project scaffolder, with a focus on simplicity.
 
 ## Install
 
@@ -37,7 +37,8 @@ At times you want to present or explain some info to the template user. This can
 ### .preinstall/.postinstall
 `.preinstall` and `postinstall` are executables. 
 
-Because the entire environment is available to you, the things you could do are endless. You could:
+Because the entire environment is available to you, the things you could do are endless. You could, for example:
+
 1. Install CLI tools (sass compiler, for example).
 2. Clone a framework into a directory.
 
