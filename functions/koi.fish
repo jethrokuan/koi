@@ -16,42 +16,46 @@ function koi -d "Create a plugin from a template" -a template name
     set -l url
 
     switch "$template"
-        case -h
-            printf "Usage: koi <url> <name> [--help]\n\n"
-            printf "    -h --help    Show usage help\n"
-            printf "Example:\n"
-            printf "koi jethrokuan/koi-template foo\n"
-            return
+      case ls
+        __koi_list
+        return
+      case -h
+        printf "Usage: koi <url> <name> [--help]\n\n"
+        printf "    ls           View available templates\n"
+        printf "    -h --help    Show usage help\n"
+        printf "Example:\n"
+        printf "koi jethrokuan/koi-template foo\n"
+        return
 
-        case \*/\*
-            set url "https://github.com/$template"
+      case \*/\*
+        set url "https://github.com/$template"
 
-        case https://\?\*
-            set url "$template"
+      case https://\?\*
+        set url "$template"
 
-        case \*
-            __koi_report "error" "koi: '$template' is not a valid template."
-            return 1
+      case \*
+        __koi_report "error" "koi: '$template' is not a valid template."
+        return 1
     end
 
     if not set -q name
-        get --prompt "Project name:\t" | read -l name
+      get --prompt "Project name:\t" | read -l name
     end
 
     if test -d "$name"
-        __koi_report "error" "koi: '$name' already exists and is not empty."
-        return 1
+      __koi_report "error" "koi: '$name' already exists and is not empty."
+      return 1
     else
-        printf "Cloning $url into '$name'...\n"
-        fish -c "command git clone -q $url $name & await"
+      printf "Cloning $url into '$name'...\n"
+      fish -c "command git clone -q $url $name & await"
 
-        # Very rough check on success of git clone
-        if test -d "$name"
-            __koi_report "success" "Clone successful"
-        else
-            __koi_report "error" "Clone unsucessful"
-            return 1
-        end
+      # Very rough check on success of git clone
+      if test -d "$name"
+        __koi_report "success" "Clone successful"
+      else
+        __koi_report "error" "Clone unsucessful"
+        return 1
+      end
     end
 
     pushd "$name"
@@ -61,71 +65,71 @@ function koi -d "Create a plugin from a template" -a template name
 
     # Print first 10 lines of intro text, if any
     if test -s .intro
-        printf "\n"
-        head -n10 .intro
-        printf "\n\n"
+      printf "\n"
+      head -n10 .intro
+      printf "\n\n"
     end
 
     if test -e ".preinstall"
-        __koi_report "info" "Running preinstall script"
-        fish -c "chmod +x .preinstall; and ./.preinstall & await"
+      __koi_report "info" "Running preinstall script"
+      fish -c "chmod +x .preinstall; and ./.preinstall & await"
     end
 
     if test -s .vars
-        set arrayName (cat .vars)
-        for var in $arrayName
-            set vars $vars $var
-        end
+      set arrayName (cat .vars)
+      for var in $arrayName
+        set vars $vars $var
+      end
     else
-        __koi_report "warn" "No variables to read from template"
-        # No variables, work is done
-        __koi_cleanup
-        return 0
+      __koi_report "warn" "No variables to read from template"
+      # No variables, work is done
+      __koi_cleanup
+      return 0
     end
 
     printf "   \nReading variable file:\n" #Spaces to erase spinner if there was a preinstall script
 
-    set -l input
-    for var in $vars
+      set -l input
+      for var in $vars
         set -l promptvar
         get --prompt "$var:" | read -l promptvar
         set input $input $promptvar
-    end
+      end
 
-    set -l cnt (count $vars)
+      set -l cnt (count $vars)
 
-    printf "\n"
+      printf "\n"
 
-    #rename folders first
-    for folder in **/
+      #rename folders first
+      for folder in **/
         for i in (seq $cnt)
-            set -l newfolder (echo $folder | sed "s/{{{$vars[$i]}}}/$input[$i]/")
-            debug "$folder $newfolder"
-            if test "$folder" != "$newfolder"
-                mv $folder $newfolder
-                break
-            end
+          set -l newfolder (echo $folder | sed "s/{{{$vars[$i]}}}/$input[$i]/")
+          debug "$folder $newfolder"
+          if test "$folder" != "$newfolder"
+            mv $folder $newfolder
+            break
+          end
         end
-    end
+      end
 
-    #process files
-    for file in **.*
+      #process files
+      for file in **.*
         if test -f "$file"
-            for i in (seq $cnt)
-                sed -i "s|{{{$vars[$i]}}}|$input[$i]|g" "$file"
-                set -l newfile (echo $file | sed "s/{{{$vars[$i]}}}/$input[$i]/")
-                if test "$file" != "$newfile"
-                    mv $file $newfile
-                    break
-                end
+          for i in (seq $cnt)
+            sed -i "s|{{{$vars[$i]}}}|$input[$i]|g" "$file"
+            set -l newfile (echo $file | sed "s/{{{$vars[$i]}}}/$input[$i]/")
+            if test "$file" != "$newfile"
+              mv $file $newfile
+              break
             end
+          end
         end
-    end
+      end
 
-    if test -e ".postinstall"
+      if test -e ".postinstall"
         __koi_report "info" "Running postinstall script"
         fish -c "chmod +x .postinstall;and ./.postinstall & await"
-    end
+      end
 
-    __koi_cleanup
-end
+      __koi_cleanup
+    end
